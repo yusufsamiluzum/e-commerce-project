@@ -1,0 +1,23 @@
+package com.ecommerce.starter;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
+
+@EntityScan(basePackages = {"com.ecommerce"})
+@EnableTransactionManagement
+@EnableJpaRepositories(basePackages = {"com.ecommerce"})
+@ComponentScan(basePackages = {"com.ecommerce"})
+@EnableScheduling
+@SpringBootApplication
+public class BackendApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(BackendApplication.class, args);
+	}
+
+}

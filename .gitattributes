@@ -1,0 +1,13 @@
+# Auto-generated or existing rules
+/mvnw text eol=lf
+*.cmd text eol=crlf
+
+# Custom cross-platform additions
+* text=auto
+*.sh text eol=lf
+*.bat text eol=crlf
+*.java text eol=lf
+*.xml text eol=lf
+*.properties text eol=lf
+*.png binary
+*.jar binary
