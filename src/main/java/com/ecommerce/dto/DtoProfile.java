@@ -1,8 +1,6 @@
 package com.ecommerce.dto;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 import com.ecommerce.entities.user.User.Sex;
 
@@ -14,14 +12,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DtoProfile {
-
-    
-    private String username;
+    // Note: userId is usually obtained from the security context/path, not part of the body DTO
+    private String username; // Often read-only after creation
     private String email;
     private String firstName;
     private String lastName;
     private Sex sex;
     private String phoneNumber;
-    private Date dateOfBirth;
-    private List<DtoAddress> addresses = new ArrayList<>();
+    private Date dateOfBirth; // Consider using LocalDate if possible, but sticking to original Date
+    // Addresses are handled via separate endpoints/methods in ProfileService v2
+    // private List<DtoAddress> addresses = new ArrayList<>(); // Removed as per ProfileService v2 design
 }

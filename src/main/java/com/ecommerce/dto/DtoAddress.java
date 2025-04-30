@@ -9,7 +9,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class DtoAddress {
 
-    private String streetAdress;
+    private Long addressId;
+    private String streetAddress;
     private String city;
     private String state;
     private String postalCode;
@@ -18,4 +19,9 @@ public class DtoAddress {
     private boolean isDefault;
     private boolean isBilling;
     private boolean isShipping;
+    // Timestamps might be omitted unless needed in the UI
+    // private LocalDateTime createdAt;
+    // private LocalDateTime updatedAt;
+    
 }
+

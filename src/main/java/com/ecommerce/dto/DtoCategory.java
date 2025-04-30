@@ -7,7 +7,8 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class DtoSetNewPassword { // Input DTO for password change
-    private String oldPassword;
-    private String newPassword;
+public class DtoCategory {
+    private Long categoryId;
+    private String name;
+    private String description;
 }
