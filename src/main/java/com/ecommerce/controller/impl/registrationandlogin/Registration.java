@@ -4,7 +4,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ecommerce.controller.IRegistrationController;
-import com.ecommerce.controller.impl.RestBaseController;
+
 import com.ecommerce.dto.DtoLoginRequest;
 import com.ecommerce.entities.user.Admin;
 import com.ecommerce.entities.user.Customer;
@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
 @RequestMapping("/rest/api/registration")
-public class Registration extends RestBaseController implements IRegistrationController {
+public class Registration implements IRegistrationController {
 
     @Autowired
     private IRegistrationService registrationService;

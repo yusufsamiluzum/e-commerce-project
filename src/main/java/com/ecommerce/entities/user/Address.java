@@ -30,8 +30,8 @@ public class Address {
     @JsonIgnore
     private User user;
     
-    @Column(name = "street_address", nullable = false, length = 255)
-    private String streetAddress;
+    @Column(name = "street", nullable = false, length = 255)
+    private String street;
     
     @Column(name = "city", nullable = false, length = 100)
     private String city;
