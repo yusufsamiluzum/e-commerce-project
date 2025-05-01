@@ -1,4 +1,4 @@
-package com.ecommerce.controller;
+package com.ecommerce.controller.impl;
 
 import com.ecommerce.dto.DtoComparison;
 import com.ecommerce.services.impl.ComparisonService; // Assuming this path

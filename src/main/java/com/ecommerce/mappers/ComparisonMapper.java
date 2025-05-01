@@ -1,4 +1,4 @@
-package com.ecommerce.services;
+package com.ecommerce.mappers;
 
 import com.ecommerce.dto.DtoProduct; // Detailed Product DTO
 import com.ecommerce.dto.DtoProductSummary; // Summary Product DTO

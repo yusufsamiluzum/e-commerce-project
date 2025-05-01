@@ -7,12 +7,11 @@ import com.ecommerce.entities.product.Category;
 import com.ecommerce.entities.product.Product;
 import com.ecommerce.entities.product.ProductComparison;
 import com.ecommerce.entities.user.Customer;
-
+import com.ecommerce.mappers.ComparisonMapper;
 import com.ecommerce.repository.CategoryRepository; // Assuming this exists
 import com.ecommerce.repository.CustomerRepository;
 import com.ecommerce.repository.ProductComparisonRepository;
 import com.ecommerce.repository.ProductRepository;
-import com.ecommerce.services.ComparisonMapper;
 
 import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
