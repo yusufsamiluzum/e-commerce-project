@@ -133,7 +133,7 @@ public class ProductServiceImpl implements ProductService { // Implement the upd
              throw new NoSuchElementException("Seller not found with id: " + sellerId);
          }
          // Assuming repository method supports pagination
-         Page<Product> productPage = productRepository.findBySellerSellerId(sellerId, pageable);
+         Page<Product> productPage = productRepository.findBySellerUserId(sellerId, pageable);
          List<DtoProductSummary> summaries = productPage.getContent().stream()
                  .map(this::mapProductToDtoProductSummary)
                  .collect(Collectors.toList());

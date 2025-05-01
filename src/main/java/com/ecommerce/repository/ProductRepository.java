@@ -35,7 +35,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
      * @param pageable Pagination information (page, size, sort).
      * @return A Page of Products sold by the specified seller.
      */
-    Page<Product> findBySellerSellerId(Long sellerId, org.springframework.data.domain.Pageable pageable);
+    Page<Product> findBySellerUserId(Long sellerId, org.springframework.data.domain.Pageable pageable);
 
     /**
      * Finds all products belonging to a specific category, supporting pagination.
