@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 
 import com.ecommerce.entities.order.Order;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -28,13 +29,24 @@ public class Payment {
     @Enumerated(EnumType.STRING)
     private PaymentMethod paymentMethod;
     
-    private String transactionId;
+    private String gatewayTransactionId;
     private BigDecimal amount;
     
     @Enumerated(EnumType.STRING)
     private PaymentStatus status = PaymentStatus.PENDING;
+
+    @Column(name = "refund_transaction_id", unique = true) // Optional: map to specific column, make unique
+    private String refundTransactionId; 
     
     // Getters & Setters
     public enum PaymentMethod { STRIPE, PAYPAL }
-    public enum PaymentStatus { SUCCESS, FAILED, PENDING }
+    public enum PaymentStatus {
+        PENDING,
+        PROCESSING,
+        SUCCESS, // Or COMPLETED, AUTHORIZED, etc.
+        FAILED,    // <-- The likely missing value (maybe named FAILED instead of PAYMENT_FAILED)
+        REFUNDED,
+        CANCELLED
+        // Add other relevant statuses
+    }
 }
