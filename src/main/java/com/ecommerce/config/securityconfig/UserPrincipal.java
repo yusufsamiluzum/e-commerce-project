@@ -30,6 +30,10 @@ public class UserPrincipal implements UserDetails {
         return Collections.singletonList(new SimpleGrantedAuthority(role));
     }
 
+    public Long getId() { // Use the correct return type (e.g., Long) matching User.getId()
+        return this.user.getUserId(); // Assumes user is not null and User has getId()
+    }
+
     @Override
     public String getPassword() {
         return user.getPassword();

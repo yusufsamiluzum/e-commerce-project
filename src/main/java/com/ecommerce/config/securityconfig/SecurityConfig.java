@@ -48,12 +48,21 @@ public class SecurityConfig {
     }
     // ++++++++++++++++++++++++++++++++++++++++++++++
 
+    // Define the paths for Swagger/OpenAPI documentation
+    private static final String[] SWAGGER_WHITELIST = {
+        "/v3/api-docs/**",          // OpenAPI specification
+        "/swagger-ui/**",           // Swagger UI webjar resources
+        "/swagger-ui.html"          // Swagger UI HTML page
+        // Add any other custom paths if you changed the defaults
+    };
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
             .csrf(AbstractHttpConfigurer::disable)
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(request -> request
+                .requestMatchers(SWAGGER_WHITELIST).permitAll()
                 .requestMatchers(
                     "/rest/api/registration/customer",
                     "/rest/api/registration/admin",
