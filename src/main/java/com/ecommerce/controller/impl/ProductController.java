@@ -1,5 +1,6 @@
 package com.ecommerce.controller.impl;
 
+import com.ecommerce.dto.DtoCategory;
 import com.ecommerce.dto.DtoProduct;
 import com.ecommerce.dto.DtoProductSummary;
 import com.ecommerce.services.ProductService;
@@ -12,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.NoSuchElementException;
 
 /**
@@ -92,6 +94,12 @@ public class ProductController {
              // Could be thrown if the seller itself doesn't exist
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Seller not found or no products listed by seller", e);
         }
+    }
+
+    @GetMapping("/categories") // New endpoint for categories
+    public ResponseEntity<List<DtoCategory>> getAllCategories() {
+        List<DtoCategory> categories = productService.getAllCategories();
+        return ResponseEntity.ok(categories); // Return the list directly
     }
 
     // --- Placeholder for Search Endpoint ---

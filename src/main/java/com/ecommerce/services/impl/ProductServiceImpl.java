@@ -250,7 +250,38 @@ public class ProductServiceImpl implements ProductService { // Implement the upd
         return mapProductToDtoProduct(fullyLoadedProduct);
     }
 
+    // --- New Category Method Implementation ---
+
+    /**
+     * Retrieves all categories from the repository and maps them to DTOs.
+     *
+     * @return A List of DtoCategory.
+     */
+    @Override
+    @Transactional(readOnly = true) // Use read-only transaction
+    public List<DtoCategory> getAllCategories() {
+        List<Category> categories = categoryRepository.findAll(); // Fetch all categories
+        // Map Category entities to DtoCategory objects
+        return categories.stream()
+                .map(this::mapCategoryToDtoCategory) // Use a helper mapping method
+                .collect(Collectors.toList());
+    }
+
     // --- Helper Methods for Mapping (Largely unchanged, ensure they fetch data if needed) ---
+
+    /**
+     * Helper method to map a Category entity to a DtoCategory.
+     *
+     * @param category The Category entity.
+     * @return The corresponding DtoCategory.
+     */
+    private DtoCategory mapCategoryToDtoCategory(Category category) {
+        return new DtoCategory(
+                category.getCategoryId(),
+                category.getName(),
+                category.getDescription()
+        );
+    }
 
     /**
      * Maps a Product entity to a full DtoProduct.

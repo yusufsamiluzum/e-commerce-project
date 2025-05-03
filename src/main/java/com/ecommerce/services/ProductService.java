@@ -1,10 +1,13 @@
 package com.ecommerce.services;
 
+import com.ecommerce.dto.DtoCategory;
 // Import user-provided DTOs
 import com.ecommerce.dto.DtoProduct;
 import com.ecommerce.dto.DtoProductSummary;
 // Removed custom exception import
 // import com.ecommerce.exception.ResourceNotFoundException;
+
+import java.util.List;
 
 import org.springframework.data.domain.Page; // For pagination
 import org.springframework.data.domain.Pageable; // For pagination
@@ -113,6 +116,13 @@ public interface ProductService {
      * @param pageable Pagination information.
      * @return A Page of DtoProductSummary objects matching the criteria.
      */
+
+    /**
+     * Retrieves a list of all available categories.
+     *
+     * @return A List of DtoCategory objects.
+     */
+    List<DtoCategory> getAllCategories(); 
     // Page<DtoProductSummary> searchProducts(String searchTerm, Long categoryId, BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable);
 
 
