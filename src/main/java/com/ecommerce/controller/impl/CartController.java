@@ -1,15 +1,22 @@
 package com.ecommerce.controller.impl;
 
+import com.ecommerce.config.securityconfig.UserPrincipal;
 import com.ecommerce.dto.DtoCart;
 import com.ecommerce.services.CartService;
+import com.stripe.model.tax.Registration.CountryOptions.Au;
+
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+
+
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 // Import your UserDetails implementation or Principal class
 // import com.ecommerce.security.UserDetailsImpl;
 import org.springframework.validation.annotation.Validated;
@@ -28,6 +35,30 @@ public class CartController {
 
     private final CartService cartService;
 
+   
+
+    private Long getCurrentCustomerId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    
+        // Add a check for null authentication or anonymous user
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
+            throw new IllegalStateException("User not authenticated or is anonymous");
+        }
+    
+        Object principal = authentication.getPrincipal();
+    
+        // Check if the principal is an instance of YOUR UserPrincipal class
+        if (principal instanceof UserPrincipal) {
+            // Cast the principal object to UserPrincipal
+            UserPrincipal userPrincipal = (UserPrincipal) principal;
+            // Now you can safely call the getId() method defined in UserPrincipal
+            return userPrincipal.getId();
+        } else {
+            // Handle the case where the principal is not the expected type
+            // This could happen if authentication setup changes or in unexpected scenarios
+            throw new IllegalStateException("Cannot extract customer ID. Principal is not of expected type UserPrincipal. Actual type: " + principal.getClass().getName());
+        }
+    }
     /**
      * Retrieves the current customer's shopping cart.
      *
@@ -107,45 +138,7 @@ public class CartController {
      * @return The authenticated customer's user ID.
      * @throws IllegalStateException if the user is not authenticated or ID cannot be retrieved.
      */
-    private Long getCurrentCustomerId() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new IllegalStateException("User not authenticated");
-        }
-
-        Object principal = authentication.getPrincipal();
-
-        // --- === Adapt this part based on your UserDetails/Principal implementation === ---
-        if (principal instanceof org.springframework.security.core.userdetails.UserDetails) {
-             // Example if using standard UserDetails and username is the ID (as String)
-             // try {
-             //     return Long.parseLong(((org.springframework.security.core.userdetails.UserDetails) principal).getUsername());
-             // } catch (NumberFormatException e) {
-             //     throw new IllegalStateException("Could not parse user ID from username", e);
-             // }
-
-             // Example if using a custom UserDetails implementation (e.g., UserDetailsImpl)
-             // if (principal instanceof UserDetailsImpl) {
-             //    return ((UserDetailsImpl) principal).getId(); // Assuming your UserDetailsImpl has a getId() method
-             // }
-
-             // --- === Default/Placeholder: Needs specific implementation === ---
-             throw new IllegalStateException("Cannot extract customer ID from principal type: " + principal.getClass());
-
-        } else if (principal instanceof String) {
-             // Handle cases where the principal is just the username String
-             // You might need to query your UserRepository here based on the username
-             // throw new IllegalStateException("Principal is a String, need custom logic to get ID");
-             throw new IllegalStateException("Cannot extract customer ID from principal type: String");
-
-        } else {
-            throw new IllegalStateException("Unknown principal type: " + principal.getClass());
-        }
-
-        // --- === IMPORTANT: Replace the above placeholder logic === ---
-        // Example (REMOVE THIS LINE and implement above): return 1L; // Replace with actual logic
-    }
 
 
     /**
