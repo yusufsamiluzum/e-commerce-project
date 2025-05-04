@@ -59,7 +59,7 @@ class ReturnRequestServiceImpl implements ReturnRequestService {
         }
 
         // 4. Check if a return request already exists for this order item (optional, depends on policy)
-        boolean exists = returnRequestRepository.findByOrderItemId(orderItem.getOrderItemId()).stream()
+        boolean exists = returnRequestRepository.findByOrderItemOrderItemId(orderItem.getOrderItemId()).stream()
                 .anyMatch(req -> req.getStatus() != ReturnStatus.CANCELLED && req.getStatus() != ReturnStatus.REJECTED);
         if (exists) {
             throw new IllegalStateException("An active return request already exists for this order item.");
@@ -89,7 +89,7 @@ class ReturnRequestServiceImpl implements ReturnRequestService {
 
      // Example: Get request ensuring it belongs to the customer
      public DtoReturnRequest getReturnRequestByIdForCustomer(Long returnRequestId, Long customerId) {
-        ReturnRequest returnRequest = returnRequestRepository.findByReturnRequestIdAndCustomerId(returnRequestId, customerId)
+        ReturnRequest returnRequest = returnRequestRepository.findByReturnRequestIdAndCustomerUserId(returnRequestId, customerId)
                 .orElseThrow(() -> new ResourceNotFoundException("ReturnRequest not found with id: " + returnRequestId + " for customer " + customerId));
         return convertToDto(returnRequest);
     }
@@ -101,7 +101,7 @@ class ReturnRequestServiceImpl implements ReturnRequestService {
          customerRepository.findById(customerId)
                 .orElseThrow(() -> new ResourceNotFoundException("Customer not found with id: " + customerId));
 
-        List<ReturnRequest> requests = returnRequestRepository.findByCustomerId(customerId);
+        List<ReturnRequest> requests = returnRequestRepository.findByCustomerUserId(customerId);
         return requests.stream().map(this::convertToDto).collect(Collectors.toList());
     }
 

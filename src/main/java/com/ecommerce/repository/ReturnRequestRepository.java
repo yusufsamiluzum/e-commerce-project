@@ -21,7 +21,7 @@ public interface ReturnRequestRepository extends JpaRepository<ReturnRequest, Lo
      * @param customerId The ID of the customer.
      * @return A list of return requests for the given customer.
      */
-    List<ReturnRequest> findByCustomerId(Long customerId);
+    List<ReturnRequest> findByCustomerUserId(Long customerUserId);
 
     /**
      * Finds all return requests associated with a specific order item.
@@ -30,7 +30,7 @@ public interface ReturnRequestRepository extends JpaRepository<ReturnRequest, Lo
      * @param orderItemId The ID of the order item.
      * @return A list of return requests for the given order item.
      */
-    List<ReturnRequest> findByOrderItemId(Long orderItemId);
+    List<ReturnRequest> findByOrderItemOrderItemId(Long orderItemId);
 
      /**
      * Finds a return request by its ID and customer ID for authorization checks.
@@ -39,7 +39,7 @@ public interface ReturnRequestRepository extends JpaRepository<ReturnRequest, Lo
      * @param customerId The ID of the customer.
      * @return An Optional containing the return request if found and belongs to the customer.
      */
-    Optional<ReturnRequest> findByReturnRequestIdAndCustomerId(Long returnRequestId, Long customerId);
+    Optional<ReturnRequest> findByReturnRequestIdAndCustomerUserId(Long returnRequestId, Long customerUserId);
 
     // Add more custom query methods as needed (e.g., find by status, date range)
 }
