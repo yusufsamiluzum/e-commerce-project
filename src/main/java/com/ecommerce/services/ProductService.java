@@ -7,6 +7,7 @@ import com.ecommerce.dto.DtoProductSummary;
 // Removed custom exception import
 // import com.ecommerce.exception.ResourceNotFoundException;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.data.domain.Page; // For pagination
@@ -116,6 +117,24 @@ public interface ProductService {
      * @param pageable Pagination information.
      * @return A Page of DtoProductSummary objects matching the criteria.
      */
+
+    /**
+     * Filters products based on multiple optional criteria.
+     *
+     * @param searchTerm Optional keyword to search across name, description, brand, category name.
+     * @param categoryId Optional category ID to filter by.
+     * @param minPrice   Optional minimum price.
+     * @param maxPrice   Optional maximum price.
+     * @param pageable   Pagination and sorting information.
+     * @return A Page of DtoProductSummary matching the criteria.
+     */
+    Page<DtoProductSummary> filterProducts(
+            String searchTerm,
+            Long categoryId,
+            BigDecimal minPrice,
+            BigDecimal maxPrice,
+            // Add other potential filter parameters here (e.g., String brand, Double minRating)
+            Pageable pageable);
 
     /**
      * Retrieves a list of all available categories.

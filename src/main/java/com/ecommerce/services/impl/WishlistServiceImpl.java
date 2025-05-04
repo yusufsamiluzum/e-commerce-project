@@ -14,7 +14,7 @@ import com.ecommerce.services.WishlistService;
 import jakarta.transaction.Transactional; // Use jakarta.transactional
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet; // Import HashSet
@@ -32,7 +32,7 @@ public class WishlistServiceImpl implements WishlistService {
     private final ProductRepository productRepository;
     private final WishlistMapper wishlistMapper;
 
-    @Autowired
+   
     public WishlistServiceImpl(WishlistRepository wishlistRepository,
                                CustomerRepository customerRepository, // Inject CustomerRepository
                                ProductRepository productRepository,

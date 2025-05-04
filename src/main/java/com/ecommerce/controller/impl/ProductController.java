@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -26,6 +27,31 @@ import java.util.NoSuchElementException;
 public class ProductController {
 
     private final ProductService productService;
+
+    /**
+     * GET /api/v1/products/filter : Filter products based on various criteria.
+     * Combines search term, category, price range, etc.
+     *
+     * @param searchTerm Optional keyword.
+     * @param categoryId Optional category ID.
+     * @param minPrice   Optional minimum price.
+     * @param maxPrice   Optional maximum price.
+     * @param pageable   Pagination/sorting information.
+     * @return ResponseEntity containing a Page of DtoProductSummary.
+     */
+    @GetMapping("/filter") // Renamed endpoint for clarity (optional)
+    public ResponseEntity<Page<DtoProductSummary>> filterProducts(
+            @RequestParam(required = false) String searchTerm,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            // Add other @RequestParam corresponding to service method parameters
+            Pageable pageable) {
+
+        Page<DtoProductSummary> results = productService.filterProducts(
+                searchTerm, categoryId, minPrice, maxPrice, /* other params, */ pageable);
+        return ResponseEntity.ok(results);
+    }
 
     /**
      * GET /api/v1/products : Get a paginated list of product summaries.

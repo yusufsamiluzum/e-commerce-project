@@ -23,16 +23,22 @@ import com.ecommerce.repository.SellerRepository;
 
 import com.ecommerce.services.ProductService;
 
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Predicate;
+
 // Imports for Pagination
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor; // Using Lombok for constructor injection
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -474,36 +480,95 @@ public class ProductServiceImpl implements ProductService { // Implement the upd
          }).collect(Collectors.toList());
      }
 
-     // --- Repository methods needed (Define/update in respective repository interfaces) ---
-     /*
-     In ProductRepository:
-        // Methods supporting Pageable for pagination
-        Page<Product> findAll(Pageable pageable);
-        Page<Product> findBySellerSellerId(Long sellerId, Pageable pageable);
-        Page<Product> findByCategoriesContains(Category category, Pageable pageable);
-        // Optional: Method with JOIN FETCH for getProductById if needed
-        // Optional<Product> findProductWithAssociationsById(Long productId);
+     @Override
+    @Transactional(readOnly = true)
+    public Page<DtoProductSummary> filterProducts(
+            String searchTerm,
+            Long categoryId,
+            BigDecimal minPrice,
+            BigDecimal maxPrice,
+            // Add other parameters corresponding to new specifications
+            Pageable pageable) {
 
-     In ProductImageRepository:
-        List<ProductImage> findByProductProductId(Long productId);
-        Optional<ProductImage> findByProductProductIdAndIsPrimary(Long productId, boolean isPrimary);
-        Optional<ProductImage> findFirstByProductProductIdOrderByImageIdAsc(Long productId);
-        void deleteByProductProductId(Long productId); // Ensure transactional safety
+        // Start with a base specification (matches all)
+        Specification<Product> spec = Specification.where(null); // Equivalent to criteriaBuilder.conjunction() initially
 
-     In ProductVariantRepository:
-        List<ProductVariant> findByProductProductId(Long productId);
-        void deleteByProductProductId(Long productId); // Ensure transactional safety
+        // Conditionally add filters by chaining specifications with AND
+        spec = spec.and(hasCategory(categoryId));
+        spec = spec.and(priceBetween(minPrice, maxPrice));
+        spec = spec.and(matchesSearchTerm(searchTerm));
 
-     In ProductAttributeRepository:
-        List<ProductAttribute> findByVariantVariantId(Long variantId);
-        void deleteByVariantVariantId(Long variantId); // Ensure transactional safety
-     */
+        // Add other filters similarly:
+        // spec = spec.and(hasBrand(brand));
+        // spec = spec.and(hasMinRating(minRating));
 
-     // Placeholder for DtoUserSummary if not defined elsewhere
-     // @Data @NoArgsConstructor @AllArgsConstructor
-     // static class DtoUserSummary { // Define this properly in your dto package
-     //    private Long userId;
-     //    private String name;
-     // }
+
+        // Execute the combined specification
+        Page<Product> productPage = productRepository.findAll(spec, pageable);
+
+        // Map results to DTOs
+        List<DtoProductSummary> summaries = productPage.getContent().stream()
+                .map(this::mapProductToDtoProductSummary)
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(summaries, pageable, productPage.getTotalElements());
+    }
+
+    // Inside ProductServiceImpl.java (or a new class ProductSpecifications)
+    private static Specification<Product> hasCategory(Long categoryId) {
+        return (root, query, criteriaBuilder) -> {
+            if (categoryId == null) {
+                return criteriaBuilder.conjunction(); // No filter if categoryId is null
+            }
+            Join<Product, Category> categoryJoin = root.join("categories");
+            return criteriaBuilder.equal(categoryJoin.get("categoryId"), categoryId);
+        };
+    }
+
+    private static Specification<Product> priceBetween(BigDecimal minPrice, BigDecimal maxPrice) {
+        return (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            if (minPrice != null) {
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("price"), minPrice));
+            }
+            if (maxPrice != null) {
+                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("price"), maxPrice));
+            }
+            // Return combined price predicates (or an always-true predicate if no price filter)
+            return predicates.isEmpty() ? criteriaBuilder.conjunction() : criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+    }
+
+    private static Specification<Product> matchesSearchTerm(String searchTerm) {
+        return (root, query, criteriaBuilder) -> {
+            if (searchTerm == null || searchTerm.isBlank()) {
+                return criteriaBuilder.conjunction(); // No filter if searchTerm is blank
+            }
+            String likePattern = "%" + searchTerm.toLowerCase() + "%";
+
+            // Ensure distinct results when joining for search term matching
+            query.distinct(true);
+
+            Join<Product, Category> categorySearchJoin = root.join("categories", JoinType.LEFT);
+
+            Predicate namePredicate = criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), likePattern);
+            Predicate descriptionPredicate = criteriaBuilder.like(criteriaBuilder.lower(root.get("description")), likePattern);
+            Predicate brandPredicate = criteriaBuilder.like(criteriaBuilder.lower(root.get("brand")), likePattern);
+            Predicate categoryNamePredicate = criteriaBuilder.like(criteriaBuilder.lower(categorySearchJoin.get("name")), likePattern);
+            // Add model, etc. if needed
+
+            return criteriaBuilder.or(
+                    namePredicate,
+                    descriptionPredicate,
+                    brandPredicate,
+                    categoryNamePredicate
+                    // Add others here
+            );
+        };
+    }
+
+// Add more specifications as needed (e.g., by brand, by rating)
+// private static Specification<Product> hasBrand(String brand) { ... }
+// private static Specification<Product> hasMinRating(Double minRating) { ... }
 }
 
