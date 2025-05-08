@@ -4,15 +4,22 @@ import java.security.NoSuchAlgorithmException; // Keep for potential future use?
 import java.util.Base64; // Keep for potential future use? Maybe remove.
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 // Removed unused import: import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 
 import org.springframework.beans.factory.annotation.Value; // <<< ADDED: For injecting properties
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+
+import com.ecommerce.config.securityconfig.UserPrincipal;
+import com.ecommerce.entities.user.User;
+
 import org.slf4j.Logger; // <<< ADDED: Logging
 import org.slf4j.LoggerFactory; // <<< ADDED: Logging
 
@@ -68,23 +75,48 @@ public class JWTService {
     */
     // ++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    public String generateToken(String username) {
+ // JWTService.java içinde (generateToken metodu)
+    public String generateToken(UserDetails userDetails) { // Parametre UserDetails oldu
         Map<String, Object> claims = new HashMap<>();
-        long expirationTimeMillis = 10 * 60 * 1000; // 10 minutes - consider making this configurable
+
+        // UserDetails'in sizin UserPrincipal implementasyonunuz olduğunu varsayalım
+        if (userDetails instanceof UserPrincipal) {
+            UserPrincipal userPrincipal = (UserPrincipal) userDetails;
+            User user = userPrincipal.getUser(); // User nesnesini al
+
+            // Gerekli claim'leri ekle
+            claims.put("userId", user.getUserId());
+            claims.put("email", user.getEmail());
+            claims.put("firstName", user.getFirstName());
+            claims.put("lastName", user.getLastName());
+
+            // Rolleri authorities olarak ekle (Angular tarafı bunu bekliyor gibi)
+            List<String> authorities = userDetails.getAuthorities().stream()
+                                           .map(GrantedAuthority::getAuthority)
+                                           .collect(Collectors.toList());
+            claims.put("authorities", authorities); // Veya "role" key'i ile tek rol
+
+            // ÖNEMLİ: Frontend'deki decodeToken fonksiyonunun beklediği
+            // claim isimleriyle (userId, authorities/role vb.) eşleştiğinden emin olun.
+
+        } else {
+             // Hata yönetimi veya loglama
+             log.error("UserDetails is not an instance of UserPrincipal. Cannot add custom claims.");
+             // Veya sadece temel claim'leri ekleyerek devam et
+        }
+
+
+        // Kalan token oluşturma kodları (expiration vb.)
+        long expirationTimeMillis = 30 * 60 * 1000; // 10 dakika
         Date now = new Date();
         Date expirationDate = new Date(now.getTime() + expirationTimeMillis);
 
-        log.debug("Generating JWT for user '{}', expiration: {}", username, expirationDate);
-
         return Jwts.builder()
-                // .claims() // .claims() is deprecated, use .claims(Map) or setters
-                // .add(claims) // .add(Map) is deprecated
-                .claims(claims) // Use setClaims or individual claim setters
-                .subject(username)
+                .claims(claims) // Güncellenmiş claim map'ini kullan
+                .subject(userDetails.getUsername()) // Subject hala username olabilir
                 .issuedAt(now)
                 .expiration(expirationDate)
-                // .and() // .and() is deprecated
-                .signWith(secretKey) // Use the initialized SecretKey object
+                .signWith(getSecretKey())
                 .compact();
     }
 

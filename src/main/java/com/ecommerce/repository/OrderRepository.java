@@ -18,5 +18,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     // Potentially add methods for finding orders by status, date range, etc.
     // List<Order> findByStatus(Order.OrderStatus status);
+    List<Order> findBySellerUserId(Long sellerId);
 
 }

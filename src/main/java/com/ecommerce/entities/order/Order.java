@@ -56,7 +56,7 @@ public class Order {
     private BigDecimal totalAmount;
     
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false, length = 20)
+    @Column(name = "status", nullable = false, length = 50)
     private OrderStatus status = OrderStatus.PENDING;
     
     @OneToOne(cascade = CascadeType.ALL)
@@ -84,7 +84,7 @@ public class Order {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
     
-    @Column(name = "order_number", unique = true, length = 20)
+    @Column(name = "order_number", unique = true, length = 50)
     private String orderNumber;
     
     // Getters & Setters

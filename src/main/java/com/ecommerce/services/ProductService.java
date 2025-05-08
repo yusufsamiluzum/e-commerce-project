@@ -144,6 +144,9 @@ public interface ProductService {
     List<DtoCategory> getAllCategories(); 
     // Page<DtoProductSummary> searchProducts(String searchTerm, Long categoryId, BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable);
 
+    
+    
+    DtoCategory createCategory(DtoCategory dtoCategory);
 
     // --- Methods for managing specific associations if needed ---
     // DtoProduct addProductImage(Long productId, DtoProductImage imageDto);

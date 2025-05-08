@@ -1,10 +1,13 @@
 package com.ecommerce.controller.impl;
 
+import com.ecommerce.dto.DtoCategory;
 import com.ecommerce.dto.DtoProduct;
 import com.ecommerce.services.ProductService;
 
 import jakarta.validation.Valid; // For input validation
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize; // For method-level security
@@ -130,4 +133,26 @@ public class AdminProductController {
              throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error approving product", e);
         }
     }
+    
+    
+    @PostMapping("/categories") // Adjust mapping if in a separate controller, e.g., @RequestMapping("/api/v1/admin/categories") then @PostMapping
+    public ResponseEntity<DtoCategory> addCategory(@Valid @RequestBody DtoCategory dtoCategory) {
+        try {
+            DtoCategory createdCategory = productService.createCategory(dtoCategory); // Assuming productService has createCategory
+
+            // Optionally, build URI for the newly created resource
+            URI location = ServletUriComponentsBuilder
+                    .fromCurrentContextPath().path("/api/v1/categories/{id}") // Example path to get a category
+                    .buildAndExpand(createdCategory.getCategoryId()).toUri();
+
+            return ResponseEntity.created(location).body(createdCategory);
+        } catch (DataIntegrityViolationException e) { // Example: if category name must be unique and is violated
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage(), e);
+        } catch (Exception e) {
+            // General error handling
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error creating category", e);
+        }
+    }
+    
+    
 }

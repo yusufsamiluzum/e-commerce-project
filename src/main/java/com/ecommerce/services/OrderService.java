@@ -28,4 +28,6 @@ public interface OrderService {
 
     // No longer public needed if using Mappers
     // DtoOrderResponse convertToDto(Order order);
+    
+    List<DtoOrderResponse> getOrdersForCurrentSeller(Long sellerId);
 }

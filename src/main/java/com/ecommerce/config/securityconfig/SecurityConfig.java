@@ -26,6 +26,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.http.HttpMethod;
+
 
 // Removed unused import: import com.ecommerce.entities.user.User;
 
@@ -68,8 +70,15 @@ public class SecurityConfig {
                     "/rest/api/registration/admin",
                     "/rest/api/registration/logisticsProvider",
                     "/rest/api/registration/seller",
-                    "/rest/api/registration/login"
+                    "/rest/api/registration/login",
+                    "/api/v1/products/**"
                 ).permitAll()
+                
+                
+                
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/products/**", "/api/v1/categories/**").permitAll()
+                
                 // --- CHANGED: Use /api/users/** pattern from UserController ---
                 // .requestMatchers("/rest/api/admin/**").hasRole("ADMIN") // Example old path
                 // .requestMatchers("/rest/api/seller/**").hasRole("SELLER") // Example old path
@@ -80,7 +89,7 @@ public class SecurityConfig {
                 // .requestMatchers("/api/admin-only-area/**").hasRole("ADMIN")
                 // For UserController paths, @EnableMethodSecurity + @PreAuthorize is used.
                 .requestMatchers("/api/users/**").authenticated() // Requires authentication for user paths
-                // --- End Change ---
+                .requestMatchers("/api/v1/**").authenticated() // /api/v1 altındaki diğer her şey (opsiyonel, daha genel)
                 .anyRequest().authenticated() // Keep this for any other paths
             )
             .sessionManagement(session ->

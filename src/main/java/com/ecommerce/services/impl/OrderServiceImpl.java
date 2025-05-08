@@ -14,6 +14,7 @@ import com.ecommerce.repository.OrderRepository;
 import com.ecommerce.repository.ProductRepository;
 import com.ecommerce.services.OrderService;
 import com.ecommerce.services.PaymentService;
+import com.ecommerce.exceptions.OrderCreationException;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,8 +48,29 @@ public class OrderServiceImpl implements OrderService {
     private final OrderMapper orderMapper;
     // Mappers for nested objects are used by OrderMapper via 'uses' attribute
     // No need to inject OrderItemMapper, ProductMapper etc. directly here if configured correctly
+    
+    
+    @Override
+    @Transactional(readOnly = true) // Okuma işlemi olduğu için
+    public List<DtoOrderResponse> getOrdersForCurrentSeller(Long sellerId) {
+        log.debug("Fetching orders for seller ID: {}", sellerId); // Loglama ekleyebilirsiniz
 
-@Override
+        // Opsiyonel: Seller'ın gerçekten var olup olmadığını kontrol etmek iyi bir pratik olabilir
+        // Seller seller = sellerRepository.findById(sellerId)
+        //        .orElseThrow(() -> new UserNotFoundException("Seller not found with ID: " + sellerId));
+
+        // OrderRepository'ye eklediğimiz metodu çağır
+        List<Order> orders = orderRepository.findBySellerUserId(sellerId);
+
+        log.debug("Found {} orders for seller ID: {}", orders.size(), sellerId);
+
+        // Bulunan Order listesini DTO listesine çevir ve döndür
+        return orderMapper.toDtoOrderResponseList(orders);
+    }
+    
+    
+
+    @Override
     @Transactional
     public DtoOrderResponse createOrder(DtoOrderRequest requestDTO, Long customerId) {
         // 1. Fetch Customer
@@ -76,6 +98,18 @@ public class OrderServiceImpl implements OrderService {
         for (DtoOrderItemRequest itemDTO : requestDTO.getItems()) {
             Product product = productRepository.findById(itemDTO.getProductId())
                     .orElseThrow(() -> new ProductNotFoundException("Product with ID " + itemDTO.getProductId() + " not found"));
+            
+            if (order.getSeller() == null && product.getSeller() != null) { // Henüz atanmadıysa ve ürünün satıcısı varsa
+                order.setSeller(product.getSeller());
+                log.info("Setting seller for order {} to seller ID: {}", order.getOrderNumber(), product.getSeller().getUserId()); // Loglama
+           } else if (order.getSeller() != null && product.getSeller() != null && !order.getSeller().getUserId().equals(product.getSeller().getUserId())) {
+               // Farklı satıcıdan ürün eklenmeye çalışılırsa hata ver (varsayıma göre)
+                log.error("Attempted to add product from different seller (Product: {}, Existing Seller: {}, New Seller: {}) to order {}",
+                       product.getProductId(), order.getSeller().getUserId(), product.getSeller().getUserId(), order.getOrderNumber());
+                throw new CartOperationException("An order can only contain products from a single seller.");
+           }
+            
+            
 
             if (product.getStockQuantity() < itemDTO.getQuantity()) {
                 throw new InsufficientStockException("Insufficient stock for product ID: " + product.getProductId());
@@ -98,6 +132,13 @@ public class OrderServiceImpl implements OrderService {
         // 5. Set final order details
         order.setItems(orderItems);
         order.setTotalAmount(totalAmount);
+        
+        
+     // Satıcı atanmadıysa hata ver (siparişte ürün yoksa veya ürünlerin satıcısı yoksa olabilir)
+        if (order.getSeller() == null) {
+             log.error("Cannot create order {} without a seller. Ensure products have sellers.", order.getOrderNumber());
+             throw new OrderCreationException("Seller could not be determined for the order. Products might be missing seller information.");
+        }
 
         // ---> 6. Create Initial Payment Record <---
         Payment initialPayment = new Payment();
@@ -132,7 +173,10 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new OrderNotFoundException("Order with ID " + orderId + " not found"));
 
         // Authorization Check
-        if (!userRole.equals("ADMIN") && !order.getCustomer().getUserId().equals(userId)) {
+        boolean isAdmin = userRole != null && userRole.equals("ROLE_ADMIN"); // userRole'un "ROLE_ADMIN" olup olmadığını kontrol et
+        boolean isOwner = order.getCustomer() != null && order.getCustomer().getUserId().equals(userId);
+
+        if (!isAdmin && !isOwner) { // Eğer admin DEĞİLSE ve sahip DEĞİLSE yetkisiz erişim fırlat
              throw new UnauthorizedAccessException("User does not have permission to view this order");
         }
 

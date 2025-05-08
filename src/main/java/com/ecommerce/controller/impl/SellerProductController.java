@@ -1,7 +1,9 @@
 package com.ecommerce.controller.impl;
 
+import com.ecommerce.dto.DtoOrderResponse;
 import com.ecommerce.dto.DtoProduct;
 import com.ecommerce.dto.DtoProductSummary;
+import com.ecommerce.services.OrderService;
 // Import the new service interface
 import com.ecommerce.services.SellerProductService; // CHANGED
 import com.ecommerce.config.securityconfig.SecurityUtils;
@@ -20,6 +22,7 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 /**
@@ -34,11 +37,15 @@ public class SellerProductController {
 
     // Inject the new SellerProductService instead of the base ProductService
     private final SellerProductService sellerProductService; // CHANGED
+    private final OrderService orderService;
+    
 
     /**
      * POST /api/v1/seller/products : Create a new product for the authenticated seller.
      * Calls SellerProductService to handle creation.
      */
+    
+    
     @PostMapping // CREATE
     public ResponseEntity<DtoProduct> createMyProduct(
             Authentication authentication,

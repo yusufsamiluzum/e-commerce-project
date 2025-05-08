@@ -75,7 +75,7 @@ public class ProductServiceImpl implements ProductService { // Implement the upd
         // 2. Map DTO to Product entity
         Product product = mapDtoToProduct(new Product(), dtoProduct);
         product.setSeller(seller);
-        product.setApproved(false); // New products are not approved by default
+        product.setApproved(Boolean.FALSE); // New products are not approved by default
 
         // 3. Handle Categories (Extract IDs from DtoCategory objects)
         Set<Long> categoryIds = dtoProduct.getCategories() != null ?
@@ -245,7 +245,7 @@ public class ProductServiceImpl implements ProductService { // Implement the upd
 
         // TODO: Add authorization check (Admin only)
 
-        product.setApproved(true);
+        product.setApproved(Boolean.TRUE);
         product.setApprovedAt(LocalDateTime.now());
         Product savedProduct = productRepository.save(product);
 
@@ -272,6 +272,36 @@ public class ProductServiceImpl implements ProductService { // Implement the upd
                 .map(this::mapCategoryToDtoCategory) // Use a helper mapping method
                 .collect(Collectors.toList());
     }
+    
+    
+    
+    @Override
+    @Transactional
+    public DtoCategory createCategory(DtoCategory dtoCategory) {
+        if (dtoCategory == null || dtoCategory.getName() == null || dtoCategory.getName().isBlank()) {
+            // Add appropriate error handling, e.g., throw new IllegalArgumentException("Category name cannot be empty");
+            // Or handle via validation annotations on the DTO at the controller level
+        }
+
+        Category category = new Category();
+        category.setName(dtoCategory.getName());
+        category.setDescription(dtoCategory.getDescription());
+        // Set other fields if any from dtoCategory
+
+        // Check if category with the same name already exists to avoid duplicates, if needed
+        // Optional<Category> existingCategory = categoryRepository.findByName(dtoCategory.getName()); // Assuming findByName method exists or is added to CategoryRepository
+        // if (existingCategory.isPresent()) {
+        //     throw new DataIntegrityViolationException("Category with name '" + dtoCategory.getName() + "' already exists.");
+        // }
+
+
+        Category savedCategory = categoryRepository.save(category);
+        return mapCategoryToDtoCategory(savedCategory); // Use existing or create a new private helper method if mapCategoryToDtoCategory is not suitable or accessible
+    }
+
+    
+    
+    
 
     // --- Helper Methods for Mapping (Largely unchanged, ensure they fetch data if needed) ---
 
@@ -566,6 +596,16 @@ public class ProductServiceImpl implements ProductService { // Implement the upd
             );
         };
     }
+    
+
+    // You already have a helper method mapCategoryToDtoCategory in ProductServiceImpl.java
+    // private DtoCategory mapCategoryToDtoCategory(Category category) {
+//         return new DtoCategory(
+//                 category.getCategoryId(),
+//                 category.getName(),
+//                 category.getDescription()
+//         );
+    // }
 
 // Add more specifications as needed (e.g., by brand, by rating)
 // private static Specification<Product> hasBrand(String brand) { ... }

@@ -10,6 +10,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder; // <<< ADDED: Injecting the bean
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException; // <<< ADDED: For broader exceptions
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional; // <<< Import Transactional
 
@@ -82,10 +83,10 @@ public class RegistrationService implements IRegistrationService {
             Authentication authentication =
                     authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()));
 
-            // Check authentication status explicitly (though authenticate() throws exception on failure)
             if (authentication.isAuthenticated()) {
-                log.info("Authentication successful for user: {}", user.getUsername());
-                return jwtService.generateToken(user.getUsername());
+                UserDetails userDetails = (UserDetails) authentication.getPrincipal(); // Authenticated UserDetails'i al
+                log.info("Authentication successful for user: {}", userDetails.getUsername());
+                return jwtService.generateToken(userDetails); // UserDetails'i generateToken'a gönder
             } else {
                 // This case might be rare if authenticate throws exceptions correctly
                 log.warn("Authentication failed for user {} without exception.", user.getUsername());

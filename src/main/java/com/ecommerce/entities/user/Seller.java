@@ -12,11 +12,14 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
@@ -41,9 +44,11 @@ public class Seller extends User {
     private String paymentAccountId;  // For receiving payments
     
     @OneToMany(mappedBy = "seller")
+    @ToString.Exclude
     private List<Product> products = new ArrayList<>();
     
     @OneToMany(mappedBy = "seller")
+    @ToString.Exclude
     private List<Order> receivedOrders = new ArrayList<>();
     
     @Override
