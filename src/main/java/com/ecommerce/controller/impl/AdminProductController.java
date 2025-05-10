@@ -2,21 +2,35 @@ package com.ecommerce.controller.impl;
 
 import com.ecommerce.dto.DtoCategory;
 import com.ecommerce.dto.DtoProduct;
+import com.ecommerce.dto.DtoProductImage;
+import com.ecommerce.entities.product.Product;
+import com.ecommerce.entities.product.ProductImage;
+import com.ecommerce.exceptions.ResourceNotFoundException;
+import com.ecommerce.repository.ProductImageRepository;
+import com.ecommerce.repository.ProductRepository;
+import com.ecommerce.services.IFileStorageService;
 import com.ecommerce.services.ProductService;
 
+import java.io.IOException;
 import jakarta.validation.Valid; // For input validation
 import lombok.RequiredArgsConstructor;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize; // For method-level security
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.util.Map;
 import java.util.NoSuchElementException;
+
+
 
 /**
  * REST Controller for administrative product management operations.
@@ -28,7 +42,92 @@ import java.util.NoSuchElementException;
 @PreAuthorize("hasRole('ADMIN')") // Class-level security: All methods require ADMIN role
 public class AdminProductController {
 
+	
     private final ProductService productService;
+    private final IFileStorageService fileStorageService;
+    private final ProductImageRepository productImageRepository; 
+    private final ProductRepository productRepository; 
+    
+    
+    private static final Logger log = LoggerFactory.getLogger(SellerProductController.class);
+
+    
+    
+    /**
+     * POST /api/v1/admin/products/{productId}/images : Upload an image for a specific product.
+     * Requires ADMIN role.
+     *
+     * @param productId The ID of the product to associate the image with.
+     * @param file      The image file uploaded via multipart form data.
+     * @param isPrimary Optional request parameter to mark the image as primary.
+     * @return ResponseEntity containing the DtoProductImage of the saved image or an error.
+     */
+    @PostMapping("/{productId}/images")
+    public ResponseEntity<?> uploadProductImage(
+            @PathVariable Long productId,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "isPrimary", defaultValue = "false") boolean isPrimary) {
+
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Please select a file to upload."));
+        }
+
+        // Ürünü bul
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", productId));
+
+        // TODO: Add validation for file type (e.g., allow only jpg, png) and size
+
+        try {
+            // Dosyayı kaydet ve benzersiz adını al
+            String uniqueFilename = fileStorageService.saveFile(file);
+
+            // Veritabanına ProductImage kaydı oluştur
+            ProductImage productImage = new ProductImage();
+            productImage.setProduct(product);
+            // URL'yi oluştururken MvcConfig'deki handler path'i kullan (/product-images/)
+            productImage.setImageUrl("/product-images/" + uniqueFilename); // Erişilebilir URL
+            productImage.setPrimary(isPrimary);
+            // productImage.setAltText(...); // İsteğe bağlı alt text
+
+            // Eğer bu primary olarak işaretlendiyse, diğerlerini primary değil yap
+            if (isPrimary) {
+                productImageRepository.findByProductProductId(productId).forEach(img -> {
+                    if (img.isPrimary()) {
+                        img.setPrimary(false);
+                        productImageRepository.save(img);
+                    }
+                });
+            }
+
+            ProductImage savedImage = productImageRepository.save(productImage);
+
+            // Başarılı yanıtı DTO ile döndür (DtoProductImage DTO'nuz olmalı)
+            DtoProductImage responseDto = new DtoProductImage(
+                    savedImage.getImageId(),
+                    savedImage.getImageUrl(),
+                    savedImage.isPrimary(),
+                    savedImage.getAltText()
+            );
+            return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
+
+        } catch (IOException e) {
+            log.error("Failed to upload image for product ID: {}", productId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Could not upload image. Error: " + e.getMessage()));
+        } catch (ResourceNotFoundException e) {
+             // Product bulunamazsa 404 dön
+             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+             log.error("Unexpected error during image upload for product ID: {}", productId, e);
+             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                     .body(Map.of("error", "An unexpected error occurred during image upload."));
+         }
+    }
+    
+    
+
+
 
     /**
      * POST /api/v1/admin/products : Create a new product.

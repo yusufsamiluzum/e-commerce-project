@@ -27,6 +27,22 @@ import java.util.NoSuchElementException;
 public class ProductController {
 
     private final ProductService productService;
+   
+    
+    
+    
+    @GetMapping("/search")
+    public ResponseEntity<Page<DtoProductSummary>> searchProducts(
+            @RequestParam(name = "q") String query, // Frontend 'q' parametresi gönderiyor
+            Pageable pageable) {
+        // Servis metodunu çağır
+        Page<DtoProductSummary> results = productService.searchProducts(query, pageable);
+        // Sonuçları OK (200) status ile döndür
+        return ResponseEntity.ok(results);
+    }
+    
+    
+    
 
     /**
      * GET /api/v1/products/filter : Filter products based on various criteria.
@@ -72,7 +88,7 @@ public class ProductController {
      * @return ResponseEntity containing the DtoProduct.
      * @throws ResponseStatusException with 404 NOT_FOUND if the product doesn't exist.
      */
-    @GetMapping("/{productId}")
+    @GetMapping("/{productId:\\d+}") 
     public ResponseEntity<DtoProduct> getProductById(@PathVariable Long productId) {
         try {
             DtoProduct product = productService.getProductById(productId);
