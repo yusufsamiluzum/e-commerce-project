@@ -35,10 +35,28 @@ public class AdminUserServiceImpl implements IAdminUserService {
     @Transactional(readOnly = true)
     public List<DtoUserSummary> getAllUsers() {
         return userRepository.findAll().stream()
-                 .map(user -> new DtoUserSummary(user.getUserId(), user.getUsername(), user.getFirstName(), user.getLastName()))
-                 .collect(Collectors.toList());
-    }
+                .map(user -> {
+                    DtoUserSummary dto = new DtoUserSummary();
+                    dto.setUserId(user.getUserId());
+                    dto.setUsername(user.getUsername());
+                    dto.setFirstName(user.getFirstName());
+                    dto.setLastName(user.getLastName());
 
+                    if (user.getRole() != null) {
+                        dto.setRole(user.getRole().name()); // Enum -> String
+                    }
+                    if (user.getStatus() != null) {
+                        dto.setStatus(user.getStatus().name()); // Enum -> String
+                    } else {
+                        // Eğer status null ise varsayılan bir değer atayabilirsiniz
+                        // Örneğin: dto.setStatus(UserStatus.ACTIVE.name());
+                        // Ama User.java'da status alanı @Column(nullable = false) ve
+                        // default UserStatus.ACTIVE olarak ayarlı, bu yüzden null olmamalı.
+                    }
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
     @Override
     @Transactional
     public DtoProfile banUser(Long userId) {

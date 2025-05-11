@@ -12,4 +12,6 @@ public class DtoUserSummary { // For embedding minimal user info
     private String username;
     private String firstName; // Optional: depending on where it's used
     private String lastName; // Optional: depending on where it's used
+    private String role;
+    private String status;
 }

@@ -70,27 +70,31 @@ public class SecurityConfig {
                     "/rest/api/registration/admin",
                     "/rest/api/registration/logisticsProvider",
                     "/rest/api/registration/seller",
-                    "/rest/api/registration/login",
-                    "/api/v1/products/**"
+                    "/rest/api/registration/login"
                 ).permitAll()
                 
-                
-                
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // CORS preflight için
+
+                // Ürünleri ve kategorileri GET ile herkes görebilsin
                 .requestMatchers(HttpMethod.GET, "/api/v1/products/**", "/api/v1/categories/**").permitAll()
                 
-                // --- CHANGED: Use /api/users/** pattern from UserController ---
-                // .requestMatchers("/rest/api/admin/**").hasRole("ADMIN") // Example old path
-                // .requestMatchers("/rest/api/seller/**").hasRole("SELLER") // Example old path
-                // .requestMatchers("/rest/api/customer/**").hasRole("CUSTOMER") // Example old path
-                // .requestMatchers("/rest/api/logistics/**").hasRole("LOGISTICS_PROVIDER") // Example old path
-                // Method-level security (@PreAuthorize) in UserController handles more granular access
-                // You might still want broad patterns here if needed, e.g.,
-                // .requestMatchers("/api/admin-only-area/**").hasRole("ADMIN")
-                // For UserController paths, @EnableMethodSecurity + @PreAuthorize is used.
-                .requestMatchers("/api/users/**").authenticated() // Requires authentication for user paths
-                .requestMatchers("/api/v1/**").authenticated() // /api/v1 altındaki diğer her şey (opsiyonel, daha genel)
-                .anyRequest().authenticated() // Keep this for any other paths
+                .requestMatchers(HttpMethod.GET, "/product-images/**").permitAll()
+
+                // Yorum EKLEME (POST) sadece MÜŞTERİ rolüyle yapılabilsin
+                .requestMatchers(HttpMethod.POST, "/api/v1/products/{productId:[0-9]+}/reviews").hasRole("CUSTOMER")
+                // Yorum GÜNCELLEME (PUT) kimliği doğrulanmış kullanıcılar (sahibi mi kontrolü @PreAuthorize ile controller'da)
+                .requestMatchers(HttpMethod.PUT, "/api/v1/reviews/{reviewId:[0-9]+}").authenticated()
+                // Yorum SİLME (DELETE) kimliği doğrulanmış kullanıcılar (sahibi mi/admin mi kontrolü @PreAuthorize ile controller'da)
+                .requestMatchers(HttpMethod.DELETE, "/api/v1/reviews/{reviewId:[0-9]+}").authenticated()
+
+                // Kullanıcı ile ilgili genel endpoint'ler kimlik doğrulaması gerektirsin
+                .requestMatchers("/api/users/**").authenticated()
+
+                // Diğer /api/v1/ altındaki (yukarıda belirtilmeyen) tüm endpoint'ler kimlik doğrulaması gerektirsin
+                .requestMatchers("/api/v1/**").authenticated()
+
+                // Diğer tüm istekler kimlik doğrulaması gerektirsin
+                .anyRequest().authenticated()
             )
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

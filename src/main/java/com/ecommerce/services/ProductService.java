@@ -44,6 +44,15 @@ public interface ProductService {
      */
     DtoProduct getProductById(Long productId);
 
+    
+    
+    
+    Page<DtoProductSummary> searchProducts(String searchTerm, Pageable pageable); // <-- YENİ METOT
+    
+    
+    
+    
+    
     /**
      * Retrieves a paginated list of all products, returning summaries.
      *

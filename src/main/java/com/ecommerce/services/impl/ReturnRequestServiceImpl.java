@@ -159,7 +159,7 @@ class ReturnRequestServiceImpl implements ReturnRequestService {
                  customer.getUserId(),
                  customer.getUsername(),
                  customer.getFirstName(),
-                 customer.getLastName()
+                 customer.getLastName(), null, null
              ));
          }
 

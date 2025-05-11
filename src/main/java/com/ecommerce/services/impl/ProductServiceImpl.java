@@ -64,6 +64,62 @@ public class ProductServiceImpl implements ProductService { // Implement the upd
     private final ProductImageRepository productImageRepository;
     private final ProductVariantRepository productVariantRepository;
     private final ProductAttributeRepository productAttributeRepository;
+    
+    
+    
+    
+    @Override
+    @Transactional(readOnly = true)
+    public Page<DtoProductSummary> searchProducts(String searchTerm, Pageable pageable) {
+        // Sadece arama terimine göre specification oluştur
+        Specification<Product> spec = Specification.where(matchesSearchTerm(searchTerm));
+
+        // Specification'ı kullanarak ürünleri bul
+        Page<Product> productPage = productRepository.findAll(spec, pageable);
+
+        // Sonuçları DTO'ya map et
+        List<DtoProductSummary> summaries = productPage.getContent().stream()
+                .map(this::mapProductToDtoProductSummary) // Mevcut map'leme metodunu kullan
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(summaries, pageable, productPage.getTotalElements());
+    }
+    
+    
+    
+    private static Specification<Product> matchesSearchTerm(String searchTerm) {
+        return (root, query, criteriaBuilder) -> {
+            if (searchTerm == null || searchTerm.isBlank()) {
+                // Arama terimi yoksa hiçbir filtre uygulama (veya bir "aktif/onaylı ürün" filtresi eklenebilir)
+                return criteriaBuilder.conjunction();
+            }
+            String likePattern = "%" + searchTerm.toLowerCase() + "%";
+
+            // Tekrarlanan sonuçları önlemek için (özellikle join yapıldığında)
+            query.distinct(true);
+
+            // Kategori adına göre arama yapmak için join (LEFT JOIN daha güvenli olabilir)
+            Join<Product, Category> categorySearchJoin = root.join("categories", JoinType.LEFT); // LEFT JOIN
+
+            // Hangi alanlarda arama yapılacağını belirle
+            Predicate namePredicate = criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), likePattern);
+            Predicate descriptionPredicate = criteriaBuilder.like(criteriaBuilder.lower(root.get("description")), likePattern);
+            Predicate brandPredicate = criteriaBuilder.like(criteriaBuilder.lower(root.get("brand")), likePattern);
+            Predicate modelPredicate = criteriaBuilder.like(criteriaBuilder.lower(root.get("model")), likePattern); // Model eklendi
+            Predicate categoryNamePredicate = criteriaBuilder.like(criteriaBuilder.lower(categorySearchJoin.get("name")), likePattern);
+
+            // Bu alanlardan herhangi birinde eşleşme varsa ürünü dahil et (OR)
+            return criteriaBuilder.or(
+                    namePredicate,
+                    descriptionPredicate,
+                    brandPredicate,
+                    modelPredicate, // Model eklendi
+                    categoryNamePredicate
+            );
+        };
+    }
+    
+    
 
     @Override
     @Transactional // Ensure atomicity
@@ -569,33 +625,7 @@ public class ProductServiceImpl implements ProductService { // Implement the upd
         };
     }
 
-    private static Specification<Product> matchesSearchTerm(String searchTerm) {
-        return (root, query, criteriaBuilder) -> {
-            if (searchTerm == null || searchTerm.isBlank()) {
-                return criteriaBuilder.conjunction(); // No filter if searchTerm is blank
-            }
-            String likePattern = "%" + searchTerm.toLowerCase() + "%";
 
-            // Ensure distinct results when joining for search term matching
-            query.distinct(true);
-
-            Join<Product, Category> categorySearchJoin = root.join("categories", JoinType.LEFT);
-
-            Predicate namePredicate = criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), likePattern);
-            Predicate descriptionPredicate = criteriaBuilder.like(criteriaBuilder.lower(root.get("description")), likePattern);
-            Predicate brandPredicate = criteriaBuilder.like(criteriaBuilder.lower(root.get("brand")), likePattern);
-            Predicate categoryNamePredicate = criteriaBuilder.like(criteriaBuilder.lower(categorySearchJoin.get("name")), likePattern);
-            // Add model, etc. if needed
-
-            return criteriaBuilder.or(
-                    namePredicate,
-                    descriptionPredicate,
-                    brandPredicate,
-                    categoryNamePredicate
-                    // Add others here
-            );
-        };
-    }
     
 
     // You already have a helper method mapCategoryToDtoCategory in ProductServiceImpl.java
